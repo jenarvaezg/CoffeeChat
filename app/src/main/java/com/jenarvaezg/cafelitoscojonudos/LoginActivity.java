@@ -17,6 +17,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -30,6 +31,9 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import org.json.JSONObject;
+
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -133,6 +137,8 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor> {
         // Store values at the time of the login attempt.
         String email = mEmailView.getText().toString();
         String password = mPasswordView.getText().toString();
+        String password2 = mPasswordView2.getText().toString();
+        Boolean isChecked = checkBox.isChecked();
 
         boolean cancel = false;
         View focusView = null;
@@ -141,6 +147,11 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor> {
         if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
             mPasswordView.setError(getString(R.string.error_invalid_password));
             focusView = mPasswordView;
+            cancel = true;
+        }
+        if (isChecked && !password.equals(password2)){
+            mPasswordView2.setError("Passwords must match");
+            focusView = mPasswordView2;
             cancel = true;
         }
 
@@ -276,20 +287,32 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor> {
 
         private final String mEmail;
         private final String mPassword;
+        private final Boolean newAccount;
 
-        UserLoginTask(String email, String password) {
+        UserLoginTask(String email, String password, newAccount Boolean) {
             mEmail = email;
             mPassword = password;
+            newAccount = newAccount;
         }
+        private final String salt = "CAFELITOS";
 
         @Override
         protected Boolean doInBackground(Void... params) {
             // TODO: attempt authentication against a network service.
 
             try {
+                JSONObject request = new JSONObject();
+                MessageDigest digest = MessageDigest.getInstance("SHA-512");
+                byte[] output = digest.digest(mPassword.getBytes());
+                digest.update(salt.getBytes());
+                String h = Base64.encodeToString(digest.digest(), Base64.DEFAULT);
+                request.put("login", mEmail);
+                request.put("pass", h);
+
                 // Simulate network access.
                 Thread.sleep(2000);
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
+                Log.d("JOSE",  e.toString());
                 return false;
             }
 
