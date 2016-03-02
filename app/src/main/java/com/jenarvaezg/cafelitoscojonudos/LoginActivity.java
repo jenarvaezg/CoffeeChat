@@ -174,7 +174,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor> {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
+            mAuthTask = new UserLoginTask(email, password, isChecked);
             mAuthTask.execute((Void) null);
         }
     }
@@ -287,27 +287,35 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor> {
 
         private final String mEmail;
         private final String mPassword;
-        private final Boolean newAccount;
+        private final Boolean mnewAccount;
 
-        UserLoginTask(String email, String password, newAccount Boolean) {
+        UserLoginTask(String email, String password,  Boolean newAccount) {
             mEmail = email;
             mPassword = password;
-            newAccount = newAccount;
+            mnewAccount = newAccount;
         }
         private final String salt = "CAFELITOS";
 
         @Override
         protected Boolean doInBackground(Void... params) {
             // TODO: attempt authentication against a network service.
-
+            byte[] response;
             try {
                 JSONObject request = new JSONObject();
                 MessageDigest digest = MessageDigest.getInstance("SHA-512");
                 byte[] output = digest.digest(mPassword.getBytes());
                 digest.update(salt.getBytes());
-                String h = Base64.encodeToString(digest.digest(), Base64.DEFAULT);
+                byte[] h = Base64.encode(digest.digest(), Base64.DEFAULT);
                 request.put("login", mEmail);
                 request.put("pass", h);
+
+                try {
+                    response = MessageHandler.communicate(h);
+                }catch(RuntimeException re){
+                    Log.d("JOSE", re.toString());
+                    return false;
+                }
+                Log.d("JOSE", new String(response));
 
                 // Simulate network access.
                 Thread.sleep(2000);
@@ -316,16 +324,16 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor> {
                 return false;
             }
 
-            for (String credential : DUMMY_CREDENTIALS) {
+            /*for (String credential : DUMMY_CREDENTIALS) {
                 String[] pieces = credential.split(":");
                 if (pieces[0].equals(mEmail)) {
                     // Account exists, return true if the password matches.
                     return pieces[1].equals(mPassword);
                 }
-            }
+            }*/
 
             // TODO: register the new account here.
-            return true;
+            return false;
         }
 
         @Override
