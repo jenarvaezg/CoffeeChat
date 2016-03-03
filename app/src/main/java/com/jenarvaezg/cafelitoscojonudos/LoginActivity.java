@@ -289,39 +289,27 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor> {
         private final String mPassword;
         private final Boolean mnewAccount;
 
+        private String ID;
+
         UserLoginTask(String email, String password,  Boolean newAccount) {
             mEmail = email;
             mPassword = password;
             mnewAccount = newAccount;
         }
-        private final String salt = "CAFELITOS";
+
 
         @Override
         protected Boolean doInBackground(Void... params) {
             // TODO: attempt authentication against a network service.
-            byte[] response;
+            String response;
             try {
-                JSONObject request = new JSONObject();
-                MessageDigest digest = MessageDigest.getInstance("SHA-512");
-                byte[] output = digest.digest(mPassword.getBytes());
-                digest.update(salt.getBytes());
-                byte[] h = Base64.encode(digest.digest(), Base64.DEFAULT);
-                request.put("login", mEmail);
-                request.put("pass", h);
-
-                try {
-                    response = MessageHandler.communicate(h);
-                }catch(RuntimeException re){
-                    Log.d("JOSE", re.toString());
-                    return false;
-                }
-                Log.d("JOSE", new String(response));
-
-                // Simulate network access.
-                Thread.sleep(2000);
+                ID = mnewAccount ? MessageHandler.login(mEmail, mPassword) :
+                MessageHandler.register(mEmail, mPassword);
+                ID = MessageHandler.login(mEmail, mPassword);
+                return true;
             } catch (Exception e) {
                 Log.d("JOSE",  e.toString());
-                return false;
+
             }
 
             /*for (String credential : DUMMY_CREDENTIALS) {
@@ -348,7 +336,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor> {
                 } else {
                     getParent().setResult(RESULT_OK, data);
                 }
-                data.putExtra("ID", "A");
+                data.putExtra("ID", ID);
                 finish();
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
