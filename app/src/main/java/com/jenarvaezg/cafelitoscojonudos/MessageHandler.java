@@ -31,13 +31,13 @@ public class MessageHandler {
     private static final String TARGET_HOST = "http://alpha.aulas.gsyc.es:8000";
     private static final String LOGIN_RESOURCE = "/login";
     private static final String REGISTER_RESOURCE = "/register";
+    private static final String POLL_RESOURCE = "/refresh";
 
     protected static String login(String email, String password) throws Exception {
-        byte[] req = new byte[0];
         JSONObject request = new JSONObject();
         MessageDigest digest = MessageDigest.getInstance("SHA-512");
-        byte[] output = digest.digest(password.getBytes());
         digest.update(salt.getBytes());
+        digest.update(password.getBytes());
         String h = Base64.encodeToString(digest.digest(), Base64.DEFAULT);
         request.put("login", email);
         request.put("pass", h);
@@ -46,11 +46,10 @@ public class MessageHandler {
     }
 
     protected static String register(String email, String password) throws Exception {
-        byte[] req = new byte[0];
         JSONObject request = new JSONObject();
         MessageDigest digest = MessageDigest.getInstance("SHA-512");
-        byte[] output = digest.digest(password.getBytes());
         digest.update(salt.getBytes());
+        digest.update(password.getBytes());
         String h = Base64.encodeToString(digest.digest(), Base64.DEFAULT);
         request.put("login", email);
         request.put("pass", h);
@@ -58,7 +57,11 @@ public class MessageHandler {
         return POST(request.toString(), REGISTER_RESOURCE);
     }
 
-    protected static String POST(final String body, final String resource){
+    public static String poll(String id) {
+        return GET(id, POLL_RESOURCE);
+    }
+
+    protected static String POST(final String body, final String resource) {
         final StringBuilder sb = new StringBuilder();
         Thread c = new Thread(){
             @Override
@@ -110,7 +113,7 @@ public class MessageHandler {
                 }
             }
         };
-        c.run();
+        c.start();
         try {
             c.join(1000);
         } catch (InterruptedException e) {
@@ -119,55 +122,59 @@ public class MessageHandler {
         return sb.toString();
     }
 
-    /*protected static byte[] communicate(byte[] request, String resource)  {
-        final byte[] req = request;
-        final byte[] resp = new byte[1024];
 
+    protected static String GET(final String id, final String resource){
+        final StringBuilder sb = new StringBuilder();
         Thread c = new Thread(){
             @Override
             public void run(){
-                OutputStream o = null;
-                InputStream i = null;
+                BufferedReader rd = null;
                 URL  url;
                 try{
-                    url = new URL("http", "alpha.aulas.gsyc.es", 8000,
-                            "/services/index.html");
-                    URLConnection connection = url.openConnection();
-                    connection.connect();
-
-                    o = connection.getOutputStream();
-                    i = connection.getInputStream();
-                    o.write(req);
-                    i.read(resp);
+                    url = new URL(TARGET_HOST + resource + "?id=" + id);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.setDoOutput(false);
+                    conn.setDoInput(true);
+                    conn.setUseCaches(false);
+                    conn.setAllowUserInteraction(false);
+                    conn.setRequestProperty("Content-Type",
+                            "application/x-www-form-urlencoded");
+                    conn.connect();
+                    if(conn.getResponseCode() != 200){
+                        throw new IOException(conn.getResponseMessage());
+                    }
+                    rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    String line;
+                    while ((line = rd.readLine()) != null) {
+                        sb.append(line);
+                    }
+                    conn.disconnect();
                 } catch (UnknownHostException e) {
                     e.printStackTrace();
-                    throw new RuntimeException("Unknow Host");
+                    throw new RuntimeException("Unknown Host");
                 } catch (IOException e) {
                     e.printStackTrace();
                     throw new RuntimeException("IOException");
                 } finally{
                     try {
-                        if (o != null) {
-                            o.close();
-                        }
-                        if (i != null) {
-                            i.close();
+                        if (rd != null) {
+                            rd.close();
                         }
                     }catch(Exception e){
                         Log.e("JOSE", e.toString());
                         throw new RuntimeException("WOW");
-
                     }
                 }
             }
         };
-        c.run();
+        c.start();
         try {
             c.join(1000);
         } catch (InterruptedException e) {
             throw new RuntimeException("Timeout");
         }
+        return sb.toString();
+    }
 
-        return resp;
-    }*/
 }

@@ -303,22 +303,21 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor> {
             // TODO: attempt authentication against a network service.
             String response;
             try {
-                ID = mnewAccount ? MessageHandler.login(mEmail, mPassword) :
-                MessageHandler.register(mEmail, mPassword);
-                ID = MessageHandler.login(mEmail, mPassword);
+                ID = mnewAccount ? MessageHandler.register(mEmail, mPassword):
+                        MessageHandler.login(mEmail, mPassword);
                 return true;
             } catch (Exception e) {
                 Log.d("JOSE",  e.toString());
 
             }
 
-            /*for (String credential : DUMMY_CREDENTIALS) {
+            for (String credential : DUMMY_CREDENTIALS) {
                 String[] pieces = credential.split(":");
                 if (pieces[0].equals(mEmail)) {
                     // Account exists, return true if the password matches.
                     return pieces[1].equals(mPassword);
                 }
-            }*/
+            }
 
             // TODO: register the new account here.
             return false;

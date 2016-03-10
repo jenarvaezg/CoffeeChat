@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
@@ -15,13 +16,14 @@ public class MainActivity extends Activity {
 
     private static String myID;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Intent activityIntent = new Intent(this, LoginActivity.class);
         startActivityForResult(activityIntent, requestCodes.LOGIN.ordinal());
-
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -30,6 +32,7 @@ public class MainActivity extends Activity {
                 if (resultCode == RESULT_OK) {
                     Bundle res = data.getExtras();
                     myID = res.getString("ID");
+                    Log.d("JOSE", "GOT " + myID);
                 }else{
                     myID = "NOT_VALID";
                 }
@@ -41,6 +44,17 @@ public class MainActivity extends Activity {
             finish();
         }
     }
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+        Log.d("JOSE", "ESTOY CREANDO UN THREAD");
+        if(myID != null) {
+            new PollerThread(myID).start();
+        }
+
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
