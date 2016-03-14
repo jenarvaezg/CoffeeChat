@@ -305,7 +305,8 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor> {
             try {
                 ID = mnewAccount ? MessageHandler.register(mEmail, mPassword):
                         MessageHandler.login(mEmail, mPassword);
-                return true;
+                return ID != null;
+
             } catch (Exception e) {
                 Log.d("JOSE",  e.toString());
 

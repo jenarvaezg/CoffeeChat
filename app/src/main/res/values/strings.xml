@@ -3,4 +3,7 @@
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="add_user_dialog">Add new User</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
 </resources>

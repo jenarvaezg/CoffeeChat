@@ -20,7 +20,7 @@ public class PollerThread extends Thread{
             } catch (InterruptedException e) {
                 break;
             }
-            MessageHandler.poll(id);
+            //MessageHandler.poll(id);
         }
     }
 }
