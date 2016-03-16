@@ -2,11 +2,10 @@ package com.jenarvaezg.cafelitoscojonudos;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.preference.DialogPreference;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,7 +15,10 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import org.json.JSONException;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class MainActivity extends Activity {
 
@@ -26,11 +28,57 @@ public class MainActivity extends Activity {
     private static EditText messageBox;
     private static Button sendButton;
 
+    private static String IDFILE = "ID_FILE";
+
+
+    private String getIDFromFile(){
+        FileInputStream fis = null;
+        String id = null;
+        try {
+            fis = openFileInput(IDFILE);
+            byte[] buffer = new byte[1024];
+            fis.read(buffer);
+            fis.close();
+            id = new String(buffer);
+        } catch (Exception e) {
+            Log.e("JOSE", "ERROR WITH FILE, " + e.getMessage());
+        }finally{
+            try{
+                if(fis != null){
+                    fis.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return id;
+    }
+
+    private void saveIDToFile(String id){
+        FileOutputStream fos = null;
+        try {
+            fos = openFileOutput(IDFILE, Context.MODE_PRIVATE);
+            fos.write(id.getBytes());
+        } catch (Exception e) {
+            Log.e("JOSE", "ERROR WITH FILE, " + e.getMessage());
+        }finally{
+            try{
+                if(fos != null){
+                    fos.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("JOSE", "ONCREATED");
         setContentView(R.layout.activity_main);
-        messageBox = (EditText) findViewById(R.id.messageBox);
+        /*messageBox = (EditText) findViewById(R.id.messageBox);
         sendButton = (Button) findViewById(R.id.sendButton);
         sendButton.setOnClickListener(new Button.OnClickListener() {
             @Override
@@ -43,9 +91,12 @@ public class MainActivity extends Activity {
                     messageBox.setText("");
                 }
             }
-        });
-        Intent activityIntent = new Intent(this, LoginActivity.class);
-        startActivityForResult(activityIntent, requestCodes.LOGIN.ordinal());
+        });*/
+        //myID = getIDFromFile();
+        if(myID == null) {
+            Intent activityIntent = new Intent(this, LoginActivity.class);
+            startActivityForResult(activityIntent, requestCodes.LOGIN.ordinal());
+        }
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -54,6 +105,7 @@ public class MainActivity extends Activity {
                 if (resultCode == RESULT_OK) {
                     Bundle res = data.getExtras();
                     myID = res.getString("ID");
+                    saveIDToFile(myID);
                     Log.d("JOSE", "GOT " + myID);
                 }else{
                     myID = "NOT_VALID";
@@ -113,7 +165,8 @@ public class MainActivity extends Activity {
                 if (userToAdd == null) {
                     return;
                 }
-                Boolean status = MessageHandler.addUserAsFriend(userToAdd, myID);
+                if(!MessageHandler.addUserAsFriend(userToAdd, myID))
+                    Toast.makeText(MainActivity.this, "User does not exist",Toast.LENGTH_LONG).show();
             }
         });
         builder.setNegativeButton(R.string.cancel, null);
