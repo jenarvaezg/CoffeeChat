@@ -3,12 +3,12 @@ package com.jenarvaezg.cafelitoscojonudos;
 /**
  * Created by joseen on 10/03/16.
  */
-public class PollerThread extends Thread{
+public class PollerTask extends Thread{
 
 
     private String id;
 
-    public PollerThread(String id){
+    public PollerTask(String id){
         this.id = id;
     }
 
@@ -20,7 +20,8 @@ public class PollerThread extends Thread{
             } catch (InterruptedException e) {
                 break;
             }
-            //MessageHandler.poll(id);
+            MessageHandler.poll(id);
+
         }
     }
 }

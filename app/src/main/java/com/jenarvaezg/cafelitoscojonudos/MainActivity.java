@@ -16,9 +16,30 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+/*messageBox = (EditText) findViewById(R.id.messageBox);
+        sendButton = (Button) findViewById(R.id.sendButton);
+        sendButton.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String msg = messageBox.getText().toString();
+                if (msg == null) {
+                    return;
+                }
+                if (MessageHandler.sendMessage(msg, "1234", myID) != null) {
+                    messageBox.setText("");
+                }
+            }
+        });*/
 
 public class MainActivity extends Activity {
 
@@ -29,6 +50,7 @@ public class MainActivity extends Activity {
     private static Button sendButton;
 
     private static String IDFILE = "ID_FILE";
+    private static String CONTACTSFILE = "CONTACTS_FILE";
 
 
     private String getIDFromFile(){
@@ -73,26 +95,62 @@ public class MainActivity extends Activity {
 
     }
 
+    private String[] getContactsFromFile(){
+        ArrayList<String> contacts = new ArrayList<>();
+        FileInputStream fis = null;
+        BufferedReader reader = null;
+        String id = null;
+        try {
+            fis = openFileInput(IDFILE);
+            reader = new BufferedReader(new InputStreamReader(fis));
+            contacts.add(reader.readLine());
+        } catch (Exception e) {
+            Log.e("JOSE", "ERROR WITH FILE, " + e.getMessage());
+        }finally{
+            try{
+                if(reader != null){
+                    reader.close();
+                }
+                if(fis != null){
+                    fis.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return contacts.toArray(new String[0]);
+    }
+
+    private void addContact(String contact){
+        FileOutputStream fos = null;
+        BufferedWriter writer = null;
+        try {
+            fos = openFileOutput(IDFILE, Context.MODE_PRIVATE);
+            writer = new BufferedWriter(new OutputStreamWriter(fos));
+            writer.write(contact + "\n");
+        } catch (Exception e) {
+            Log.e("JOSE", "ERROR WITH FILE, " + e.getMessage());
+        }finally{
+            try{
+                if(writer != null){
+                    writer.close();
+                }
+                if(fos != null){
+                    fos.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d("JOSE", "ONCREATED");
         setContentView(R.layout.activity_main);
-        /*messageBox = (EditText) findViewById(R.id.messageBox);
-        sendButton = (Button) findViewById(R.id.sendButton);
-        sendButton.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String msg = messageBox.getText().toString();
-                if (msg == null) {
-                    return;
-                }
-                if (MessageHandler.sendMessage(msg, "1234", myID) != null) {
-                    messageBox.setText("");
-                }
-            }
-        });*/
-        //myID = getIDFromFile();
+        Log.d("JOSE", Arrays.toString(getContactsFromFile()));
+        myID = getIDFromFile();
         if(myID == null) {
             Intent activityIntent = new Intent(this, LoginActivity.class);
             startActivityForResult(activityIntent, requestCodes.LOGIN.ordinal());
@@ -121,8 +179,9 @@ public class MainActivity extends Activity {
     protected void onResume(){
         super.onResume();
         if(myID != null) {
-            new PollerThread(myID).start();
+            new PollerTask(myID).start();
         }
+
     }
 
 
@@ -162,11 +221,14 @@ public class MainActivity extends Activity {
         builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 String userToAdd = input.getText().toString();
-                if (userToAdd == null) {
+                /*if (userToAdd == null) {
                     return;
+                }*/
+                if (!MessageHandler.addUserAsFriend(userToAdd, myID)) {
+                    Toast.makeText(MainActivity.this, "User does not exist", Toast.LENGTH_LONG).show();
+                } else {
+                    addContact(userToAdd);
                 }
-                if(!MessageHandler.addUserAsFriend(userToAdd, myID))
-                    Toast.makeText(MainActivity.this, "User does not exist",Toast.LENGTH_LONG).show();
             }
         });
         builder.setNegativeButton(R.string.cancel, null);
