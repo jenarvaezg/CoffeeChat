@@ -4,5 +4,7 @@
     <item android:id="@+id/action_settings" android:title="@string/action_settings"
         android:orderInCategory="100" app:showAsAction="never" />
     <item android:id="@+id/action_add" android:title="Add User"
-        android:orderInCategory="99" app:showAsAction="always" />
+        android:orderInCategory="99" />
+    <item android:id="@+id/action_create_group" android:title="Create Groups"
+        android:orderInCategory="99" />
 </menu>

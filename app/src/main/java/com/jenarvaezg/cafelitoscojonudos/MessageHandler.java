@@ -1,8 +1,10 @@
 package com.jenarvaezg.cafelitoscojonudos;
 
+import android.net.wifi.WifiManager;
 import android.util.Base64;
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -28,12 +30,13 @@ public class MessageHandler {
 
     private static final String salt = "CAFELITOS";
 
-    private static final String TARGET_HOST = "http://alpha.aulas.gsyc.es:8000";
+    private static final String TARGET_HOST = "http://beta.aulas.gsyc.es:8000";
     private static final String LOGIN_RESOURCE = "/login";
     private static final String REGISTER_RESOURCE = "/register";
     private static final String POLL_RESOURCE = "/refresh";
     private static final String SEND_MESSAGE_RESOURCE = "/message";
     private static final String ADD_USER_RESOURCE = "/add_user";
+    private static final String CREATE_GROUP_RESOURCE = "/create_group";
 
     private static boolean exceptioned = false;
 
@@ -94,6 +97,28 @@ public class MessageHandler {
         return email;
     }
 
+    public static int createGroup(String myID, String groupName, String[] contacts) {
+        JSONObject request = new JSONObject();
+        try {
+            request.put("name", groupName);
+            request.put("creator", myID);
+            JSONArray users = new JSONArray();
+            for(String user: contacts){
+                users.put(user);
+            }
+            request.put("users", users);
+
+        }catch (JSONException e){
+            return -1;
+        }
+        String response = POST(request.toString(), CREATE_GROUP_RESOURCE);
+        if(exceptioned){
+            exceptioned = false;
+            return -2;
+        }
+        return 0;
+    }
+
     public static String poll(String id) {
         String response = GET(id, POLL_RESOURCE);
         if(exceptioned){
@@ -106,8 +131,9 @@ public class MessageHandler {
     protected static String sendMessage(String message, String to, String from){
         JSONObject request = new JSONObject();
         String response;
+        Log.d("JOSE", "FROM: " + from + " TO:  " + to);
         try {
-            request.put("content", message);
+            request.put("body", message);
             request.put("from", from);
             request.put("date", System.currentTimeMillis());
             request.put("to", to);
@@ -257,5 +283,6 @@ public class MessageHandler {
         }
         return sb.toString();
     }
+
 
 }
