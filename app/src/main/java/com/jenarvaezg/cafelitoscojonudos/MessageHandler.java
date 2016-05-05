@@ -1,5 +1,6 @@
 package com.jenarvaezg.cafelitoscojonudos;
 
+import android.location.Location;
 import android.net.wifi.WifiManager;
 import android.util.Base64;
 import android.util.Log;
@@ -119,8 +120,9 @@ public class MessageHandler {
         return 0;
     }
 
-    public static String poll(String id) {
-        String response = GET(id, POLL_RESOURCE);
+    public static String poll(String id, Location location) {
+
+        String response = GET(id, location, POLL_RESOURCE);
         if(exceptioned){
             exceptioned = false;
             return null;
@@ -229,7 +231,7 @@ public class MessageHandler {
     }
 
 
-    protected static String GET(final String id, final String resource){
+    protected static String GET(final String id, final Location location, final String resource){
         final StringBuilder sb = new StringBuilder();
         Thread c = new Thread(){
             @Override
@@ -237,7 +239,12 @@ public class MessageHandler {
                 BufferedReader rd = null;
                 URL  url;
                 try{
-                    url = new URL(TARGET_HOST + resource + "?id=" + id);
+                    String urlString = TARGET_HOST + resource + "?id=" + id;
+                    if(location != null){
+                        urlString += "&lat=" + Double.toString(location.getLatitude());
+                        urlString += "&long=" + Double.toString(location.getLongitude());
+                    }
+                    url = new URL(urlString);
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("GET");
                     conn.setDoOutput(false);

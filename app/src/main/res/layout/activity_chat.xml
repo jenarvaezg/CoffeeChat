@@ -10,7 +10,7 @@
         android:id="@+id/scrollChat"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="9">
+        android:layout_weight="8">
         <LinearLayout
             android:id="@+id/chatLayout"
             android:layout_width="match_parent"
@@ -24,18 +24,21 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="2"
+        android:minHeight="150dp">
         <EditText
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="50dp"
             android:layout_weight="7"
             android:id="@+id/msgBox"
+            android:layout_gravity="bottom"
             android:inputType="textLongMessage"/>
         <Button
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="50dp"
             android:layout_weight="3"
             android:id="@+id/sendButton"
+            android:layout_gravity="bottom"
             android:text="Send"/>
     </LinearLayout>
 </LinearLayout>

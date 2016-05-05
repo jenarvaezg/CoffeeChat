@@ -7,6 +7,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -47,6 +48,10 @@ public class Message {
             this.n = n;
             this.from = from;
         }
+
+        public String toString(){
+            return Integer.toString(n) + " messages from: " + from;
+        }
     }
 
     public Message(String from, String to, long date, String body, String chat){
@@ -77,7 +82,14 @@ public class Message {
     }
 
     public Boolean isPrivateForYou(){
+        Log.d("JOSE", this.toString());
         return this.to.equals("YOU") || this.from.equals("YOU");
+    }
+
+    synchronized static public boolean removeHistory(Context ctx, String chat){
+        File dir = ctx.getFilesDir();
+        File file = new File(dir, FILE_BASE+chat);
+        return file.delete();
     }
 
     synchronized public void addMsg(Context ctx, Boolean fromMe){
@@ -86,7 +98,7 @@ public class Message {
             if (nBefore == null){
                 nBefore = 0;
             }
-            newMsgs.put(this.chat, nBefore + 1);//TODO PROBAR ESTO CHUCO
+            newMsgs.put(this.chat, nBefore + 1);
         }
         FileOutputStream fos = null;
         DataOutputStream dos = null;
@@ -171,4 +183,6 @@ public class Message {
         }
         return unread.toArray(new UnreadMessagesNumber[0]);
     }
+
+
 }

@@ -300,7 +300,6 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor> {
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            Log.d("JOSE", "IN BACKGROUND");
             // TODO: attempt authentication against a network service.
             String response;
             try {

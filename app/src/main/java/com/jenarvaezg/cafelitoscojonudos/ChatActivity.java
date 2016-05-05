@@ -3,6 +3,7 @@ package com.jenarvaezg.cafelitoscojonudos;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
@@ -73,6 +74,8 @@ public class ChatActivity extends Activity {
     }
 
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,6 +85,7 @@ public class ChatActivity extends Activity {
         myIDG = getIntent().getStringExtra("myID");
 
         final EditText msgBox = (EditText) findViewById(R.id.msgBox);
+
         Button sendButton = (Button) findViewById(R.id.sendButton);
         final String otherUser = otherUserG;
         final String myID = myIDG;
@@ -144,12 +148,12 @@ public class ChatActivity extends Activity {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+        /*int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
-        }
+        }*/
 
         return super.onOptionsItemSelected(item);
     }
