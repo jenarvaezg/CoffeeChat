@@ -23,6 +23,7 @@ import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.lang.Thread;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 /**
  * Created by jose on 3/2/16.
@@ -38,6 +39,7 @@ public class MessageHandler {
     private static final String SEND_MESSAGE_RESOURCE = "/message";
     private static final String ADD_USER_RESOURCE = "/add_user";
     private static final String CREATE_GROUP_RESOURCE = "/create_group";
+    private static final String GET_OFFICE_RESOURCE = "/get_office";
 
     private static boolean exceptioned = false;
 
@@ -165,6 +167,24 @@ public class MessageHandler {
             return false;
         }
         return response.equals("OK");
+    }
+
+    protected static Float[] getOffice(String me){
+        String response = GET(me, null, GET_OFFICE_RESOURCE);
+        if(exceptioned){
+            exceptioned = false;
+            return null;
+        }
+        String[] spl = response.split("&");
+        if(spl.length != 3){
+            Log.d("JOSE", Arrays.toString(spl) + " len: " + Integer.toString(spl.length));
+            return new Float[]{-1f, -1f, -1f};
+        }
+        Float[] values = new Float[3];
+        for(int i = 0; i < values.length; i++){
+            values[i] = Float.parseFloat(spl[i]);
+        }
+        return values;
     }
 
     protected static String POST(final String body, final String resource) {

@@ -2,9 +2,11 @@ package com.jenarvaezg.cafelitoscojonudos;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.hardware.GeomagneticField;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -57,6 +59,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     private Sensor mPressure;
     private Sensor mLight;
     private Sensor mCompass;
+    protected Dialog mCompassDialog;
 
 
     protected enum requestCodes{LOGIN}
@@ -387,11 +390,11 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     private void findOffice() {
         View compassView = View.inflate(this, R.layout.compass_layout, null);
         final ImageView compassArrow = (ImageView) compassView.findViewById(R.id.compass_arrow);
-        compassArrow.setRotation(90);
+        final TextView tv = (TextView) compassView.findViewById(R.id.compass_text);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setView(compassView);
         builder.setTitle("Where is the Office!?");
-        final RotationTask task = new RotationTask(compassArrow);
+        final RotationTask task = new RotationTask(compassArrow, tv);
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         Log.d("JOSE", "EXECUTED?");
 
@@ -402,7 +405,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             }
         });
 
-        builder.show();
+        mCompassDialog = builder.show();
 
     }
 
@@ -521,12 +524,17 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     @Override
     protected void onPause() {
         super.onPause();
+        if(mCompassDialog != null && mCompassDialog.isShowing()){
+            mCompassDialog.dismiss();
+        }
         mSensorManager.unregisterListener(this);
     }
 
-    class RotationTask extends AsyncTask<String, Float, Float>{
+    class RotationTask extends AsyncTask<String, Float, Integer>{
 
         ImageView compassArrow;
+        TextView tv;
+        Float minDistance;
 
         Boolean kill = false;
 
@@ -534,8 +542,9 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             this.kill = true;
         }
 
-        public RotationTask(ImageView compassArrow){
+        public RotationTask(ImageView compassArrow, TextView tv){
             this.compassArrow = compassArrow;
+            this.tv = tv;
         }
 
         private float normalizeDegree(float value) {
@@ -547,17 +556,22 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         }
 
         @Override
-        protected Float doInBackground(String... strings) {
+        protected Integer doInBackground(String... strings) {
             Log.d("JOSE", "ROLLING");
             Location targetLocation = new Location("");//provider name is unecessary
-            targetLocation.setLatitude(40.287610d);//your coords of course
-            targetLocation.setLongitude(-3.808517);
-            Location myLoc;
+            /*targetLocation.setLatitude(40.287610d);//your coords of course
+            targetLocation.setLongitude(-3.808517);*/
+            Float[] values = MessageHandler.getOffice(MainActivity.myID);
+            if(values == null || values[2] == -1){
+                return 1;
+            }
+            targetLocation.setLatitude(values[0]);
+            targetLocation.setLongitude(values[1]);
+            minDistance = values[2];
             mSensorManager.registerListener(MainActivity.this, mCompass, SensorManager.SENSOR_DELAY_GAME);
             while(!kill){
                 try {
-
-                    myLoc = MainActivity.getLocation();
+                    Location myLoc = MainActivity.getLocation();
                     GeomagneticField geoField = new GeomagneticField(
                             Double.valueOf(myLoc.getLatitude()).floatValue(),
                             Double.valueOf(myLoc.getLongitude()).floatValue(),
@@ -565,23 +579,43 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                             System.currentTimeMillis()
                     );
                     Float heading = -toNorth;
-                    Log.d("JOSE", "NORTH: " + Float.toString(toNorth));
+
+                    //Log.d("JOSE", "NORTH: " + Float.toString(toNorth));
                     heading += geoField.getDeclination();
                     heading = (myLoc.bearingTo(targetLocation) - heading) * -1;
-                    Log.d("JOSE", Float.toString((heading + 360) % 360));
-                    publishProgress((heading + 360) % 360);
+                    Float[] updateVals = new Float[2];
+                    updateVals[0] = (heading + 360) % 360;
+                    updateVals[1] = myLoc.distanceTo(targetLocation);
+                    publishProgress(updateVals);
                 }catch (Exception e){
                     Log.e("JOSE", "BYE VIETNAM");
                     break;
                 }
             }
             mSensorManager.unregisterListener(MainActivity.this, mCompass);
-            return 0.0f;
+            return 0;
         }
 
         @Override
-        protected void onProgressUpdate(Float... bearing){
-            compassArrow.setRotation((bearing[0] + 180) % 360);
+        protected void onProgressUpdate(Float... vals){
+            compassArrow.setRotation((vals[0] + 180) % 360);
+            String text = "You are " + Integer.toString(Math.round(vals[1])) + " meters away from the office";
+            tv.setTextColor(Color.WHITE);
+            if(vals[1] <= minDistance){
+                tv.setTextColor(Color.RED);
+                text += "\n You are ready to coffee!!";
+            }
+            tv.setText(text);
+        }
+
+        @Override
+        protected void onPostExecute(Integer result){
+            if(result == 1){
+                Toast.makeText(MainActivity.this, "Can't get Office's location", Toast.LENGTH_LONG).show();
+            }
+            if(mCompassDialog != null && mCompassDialog.isShowing()){
+                mCompassDialog.cancel();
+            }
         }
     }
 }
